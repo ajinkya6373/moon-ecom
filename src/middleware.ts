@@ -1,13 +1,14 @@
 // pages/_middleware.ts
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import nookies from 'nookies';
 
 export function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     const token = req.cookies.get('authToken')?.value || null;  
 
-  
+  if (url.pathname==="/") {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
 
   if (url.pathname.startsWith('/categories')) {
     if (!token) {

@@ -1,51 +1,57 @@
-import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from "next/router";
 import { api } from "~/utils/api";
-
+import AuthForm from "./components/AuthForm";
+import Navbar from "./components/Navbar";
+import { useState } from "react";
 
 const SignupPage = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const registerMutation = api.user.register.useMutation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
-  const handleSubmit = async (e:any) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true); // Start loading
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
     try {
-        const result = await registerMutation.mutateAsync({ name, email, password })
-        if(result){
-            await router.push('/verify-otp?email=' + email);
-        }
+      await registerMutation.mutateAsync(
+        {
+          name,
+          email,
+          password,
+        },
+        {
+          onSuccess: () => {
+            console.log("Registration successful");
+            router.push("/verify-otp?email=" + email);
+          },
+          onError: (error) => {
+            console.error(error);
+            setErrorMessage(error.message||"Failed to register."); 
+          },
+          onSettled: () => {
+            setIsLoading(false);
+          },
+        },
+      );
     } catch (error) {
       console.error(error);
+      // This catch block is redundant since onError handles errors
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h1>Sign Up</h1>
-      <input
-        type="text"
-        placeholder="Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button type="submit">Create New Account</button>
-    </form>
+    <>
+      <Navbar />
+      <div className="mt-8">
+        <AuthForm type="signup" onSubmit={handleSignup} isLoading={isLoading} errorMessage={errorMessage}/>;
+      </div>
+    </>
   );
 };
 

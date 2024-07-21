@@ -1,50 +1,53 @@
-import { useState } from "react";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
-import nookies from 'nookies';
-
+import nookies from "nookies";
+import AuthForm from "./components/AuthForm";
+import Navbar from "./components/Navbar";
+import { useState } from "react";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const loginMutation = api.user.login.useMutation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
-  const handleSubmit = async (e: any) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true); // Start loading
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
     try {
-      const result = await loginMutation.mutateAsync({ email, password });
-      console.log(result)
-      if (result) {
-        nookies.set(null, 'authToken', result.token, {
-          path: "/",
-          sameSite: "lax",
+      await loginMutation.mutateAsync({ email, password }, {
+        onSuccess: (data) => {
+          console.log("Login successful");
+          nookies.set(null, "authToken", data.token, {
+            path: "/",
+            sameSite: "lax",
           });
-        router.push("/categories");
-      }
+          router.push("/categories");
+        },
+        onError: (error) => {
+          console.error(error);
+          setErrorMessage( error.message || "Failed to log in.");
+        },
+        onSettled: () => {
+          setIsLoading(false); 
+        },
+      });
     } catch (error) {
       console.error(error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h1>Login</h1>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button type="submit">Login</button>
-    </form>
+    <>
+      <Navbar/>
+      <div className="mt-8">
+        <AuthForm type="login" onSubmit={handleLogin} isLoading={isLoading} errorMessage={errorMessage}/>;
+      </div>
+    </>
   );
 };
 
