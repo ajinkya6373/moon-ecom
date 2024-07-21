@@ -1,5 +1,6 @@
 import React from "react";
 import InputField from "./InputField";
+import Link from "next/link";
 
 interface AuthFormProps {
   type: "signup" | "login";
@@ -62,16 +63,16 @@ const AuthForm: React.FC<AuthFormProps> = ({
       {type === "signup" ? (
         <p className="mt-4 text-center text-base font-normal text-[#333333]">
           Have an Account?{" "}
-          <a href="/login" className="font-medium text-black">
+          <Link href="/login" className="font-medium text-black">
             LOGIN
-          </a>
+          </Link>
         </p>
       ) : (
         <p className="mt-4 text-center text-base font-normal text-[#333333]">
           Don’t have an Account?{" "}
-          <a href="/signup" className="font-medium text-black">
+          <Link href="/signup" className="font-medium text-black">
             SIGN UP
-          </a>
+          </Link>
         </p>
       )}
     </div>
